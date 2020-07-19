@@ -1841,33 +1841,64 @@ static struct command_result *shadow_route_listchannels(struct command *cmd,
 	}
 
 	if (best != NULL) {
-		bool ok;
-		/* Ok, we found an extension, let's add it. */
-		d->destination = best->pubkey;
-
-		/* Apply deltas to the constraints in the shadow route so we
-		 * don't overshoot our 1/4th target. */
-		if (!payment_constraints_update(&d->constraints, best_fee,
-						best->cltv_expiry_delta)) {
+		/* Check that we could apply the shadow route extension. Check
+		 * against both the shadow route budget as well as the
+		 * original payment's budget. */
+		if (best->cltv_expiry_delta > d->constraints.cltv_budget ||
+		    best->cltv_expiry_delta > p->constraints.cltv_budget) {
 			best = NULL;
 			goto next;
 		}
 
-		/* Now do the same to the payment constraints so other
-		 * modifiers don't do it either. */
-		ok = payment_constraints_update(&p->constraints, best_fee,
-						 best->cltv_expiry_delta);
-
-		/* And now the thing that caused all of this: adjust the call
-		 * to getroute. */
-		if (d->fuzz_amount) {
-			/* Only fuzz the amount to route to the destination if
-			 * we didn't opt-out earlier. */
-			ok &= amount_msat_add(&p->getroute->amount,
-					      p->getroute->amount, best_fee);
+		/* Check the fee budget only if we didn't opt out, since
+		 * testing against a virtual budget is not useful if we do not
+		 * actually use it (it could give false positives and fail
+		 * attempts that might have gone through, */
+		if (d->fuzz_amount &&
+		    (amount_msat_greater(best_fee, d->constraints.fee_budget) ||
+		     (amount_msat_greater(best_fee,
+					  p->constraints.fee_budget)))) {
+			best = NULL;
+			goto next;
 		}
+
+		/* Now we can be sure that adding the shadow route will succeed */
+		plugin_log(
+		    p->plugin, LOG_DBG,
+		    "Adding shadow_route hop over channel %s: adding %s "
+		    "in fees and %d CLTV delta",
+		    type_to_string(tmpctx, struct short_channel_id,
+				   &best->short_channel_id),
+		    type_to_string(tmpctx, struct amount_msat, &best_fee),
+		    best->cltv_expiry_delta);
+
+		d->destination = best->pubkey;
+		d->constraints.cltv_budget -= best->cltv_expiry_delta;
 		p->getroute->cltv += best->cltv_expiry_delta;
-		assert(ok);
+
+		if (!d->fuzz_amount)
+			goto next;
+
+		/* Only try to apply the fee budget changes if we want to fuzz
+		 * the amount. Virtual fees that we then don't deliver to the
+		 * destination could otherwise cause the route to be too
+		 * expensive, while really being ok. If any of these fail then
+		 * the above checks are insufficient. */
+		if (!amount_msat_sub(&d->constraints.fee_budget,
+				     d->constraints.fee_budget, best_fee) ||
+		    !amount_msat_sub(&p->constraints.fee_budget,
+				     p->constraints.fee_budget, best_fee))
+			plugin_err(p->plugin,
+				   "Could not update fee constraints "
+				   "for shadow route extension. "
+				   "payment fee budget %s, modifier "
+				   "fee budget %s, shadow fee to add %s",
+				   type_to_string(tmpctx, struct amount_msat,
+						  &p->constraints.fee_budget),
+				   type_to_string(tmpctx, struct amount_msat,
+						  &d->constraints.fee_budget),
+				   type_to_string(tmpctx, struct amount_msat,
+						  &best_fee));
 	}
 
 next:
