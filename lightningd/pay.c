@@ -793,14 +793,6 @@ send_payment_core(struct lightningd *ld,
 	/* Now, do we already have one or more payments? */
 	payments = wallet_payment_list(tmpctx, ld->wallet, rhash);
 	for (size_t i = 0; i < tal_count(payments); i++) {
-		log_debug(ld->log, "Payment %zu/%zu: %s %s",
-			  i, tal_count(payments),
-			  type_to_string(tmpctx, struct amount_msat,
-					 &payments[i]->msatoshi),
-			  payments[i]->status == PAYMENT_COMPLETE ? "COMPLETE"
-			  : payments[i]->status == PAYMENT_PENDING ? "PENDING"
-			  : "FAILED");
-
 		switch (payments[i]->status) {
 		case PAYMENT_COMPLETE:
 			if (payments[i]->partid != partid)
