@@ -1750,13 +1750,9 @@ REGISTER_PAYMENT_MODIFIER(exemptfee, struct exemptfee_data *,
 
 static struct shadow_route_data *shadow_route_init(struct payment *p)
 {
-	if (p->parent != NULL) {
-		return payment_mod_shadowroute_get_data(p->parent);
-	} else {
-		struct shadow_route_data *d = tal(p, struct shadow_route_data);
-		d->fuzz_amount = true;
-		return d;
-	}
+	struct shadow_route_data *d = tal(p, struct shadow_route_data);
+	d->fuzz_amount = true;
+	return d;
 }
 
 /* Mutual recursion */
