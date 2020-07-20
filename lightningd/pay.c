@@ -795,6 +795,25 @@ send_payment_core(struct lightningd *ld,
 	for (size_t i = 0; i < tal_count(payments); i++) {
 		switch (payments[i]->status) {
 		case PAYMENT_COMPLETE:
+			/* Any successful (sub-)payment means that the
+			 * preimage for this payment_hash must be assumed to
+			 * be publicly known, and should not be reused. This
+			 * also implies that in MPP any successful sub-payment
+			 * terminates the payment as a whole. Due to the use
+			 * of sendonion we may have very limited information,
+			 * so this is the best we can do. */
+			if (payments[i]->partid != 0 && partid != 0) {
+				log_debug(
+				    ld->log,
+				    "Returning success for payment %s/%zu "
+				    "since part %zu succeeded before.",
+				    type_to_string(tmpctx, struct sha256,
+						   rhash),
+				    partid, payments[i]->partid);
+				return sendpay_success(cmd, payments[i]);
+			}
+
+
 			if (payments[i]->partid != partid)
 				continue;
 

@@ -3178,3 +3178,33 @@ def test_pay_fail_unconfirmed_channel(node_factory, bitcoind):
 
     # Now l1 can pay to l2.
     l1.rpc.pay(invl2)
+
+
+@pytest.mark.xfail(strict=True)
+def test_duplicate_pay(node_factory):
+    """Paying the same invoice twice should complete immediately
+    """
+    l1, l2, l3 = node_factory.line_graph(3, wait_for_announce=True)
+    wait_for(lambda: len(l1.rpc.listchannels()['channels']) == 4)
+
+    # Make an invoice large enough to require a MPP presplit
+    inv = l3.rpc.invoice(2*10**6, "dup", "desc")['bolt11']
+
+    # This one should succeed
+    l1.rpc.pay(inv)
+
+    # For this to be fully settled there must not be any HTLCs in flight
+    wait_for(lambda: len(l1.rpc.listpeers()['peers'][0]['channels'][0]['htlcs']) == 0)
+
+    before = l1.rpc.listpeers()['peers'][0]['channels'][0]['spendable_msat']
+    # This one should still succeed, but not result in any actual attempts
+    l1.rpc.pay(inv)
+    assert(l1.daemon.is_in_log(
+        r'Returning success for payment [a-f0-9]{64}/[0-9]+ since '
+        'part [0-9]+ succeeded before.'
+    ))
+
+    # In particular we must not have sent any funds out as a result of the
+    # duplicate pay invocation.
+    after = l1.rpc.listpeers()['peers'][0]['channels'][0]['spendable_msat']
+    assert(after == before)
