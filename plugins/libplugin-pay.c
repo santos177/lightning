@@ -791,6 +791,7 @@ handle_intermediate_failure(struct command *cmd,
 	/* BOLT #4:
 	 *
 	 * An _intermediate hop_ MUST NOT, but the _final node_:
+	 *...
 	 *     - MUST return an `incorrect_or_unknown_payment_details` error.
 	 *...
 	 *     - MUST return `final_incorrect_cltv_expiry` error.
