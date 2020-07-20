@@ -1929,6 +1929,9 @@ static struct shadow_route_data *shadow_route_init(struct payment *p)
 	if (p->parent != NULL) {
 		pd = payment_mod_shadowroute_get_data(p->parent);
 		d->fuzz_amount = pd->fuzz_amount;
+#if DEVELOPER
+		d->use_shadow = pd->use_shadow;
+#endif
 	} else {
 		d->fuzz_amount = true;
 	}
