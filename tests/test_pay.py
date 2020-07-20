@@ -3159,7 +3159,7 @@ def test_pay_fail_unconfirmed_channel(node_factory, bitcoind):
     # create l2->l1 channel.
     l2.fundwallet(amount_sat * 5)
     l1.rpc.connect(l2.info['id'], 'localhost', l2.port)
-    scid = l2.rpc.fundchannel(l1.info['id'], amount_sat * 3)
+    l2.rpc.fundchannel(l1.info['id'], amount_sat * 3)
     # channel is still unconfirmed.
 
     # Attempt to pay from l1 to l2.
