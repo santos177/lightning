@@ -1969,7 +1969,7 @@ static struct command_result *shadow_route_listchannels(struct command *cmd,
 	u64 sample = 0;
 	struct amount_msat best_fee;
 	const jsmntok_t *sattok, *delaytok, *basefeetok, *propfeetok, *desttok,
-	    *channelstok, *chan;
+		*channelstok, *chan, *scidtok;
 
 	/* Check the invariants on the constraints between payment and modifier. */
 	assert(d->constraints.cltv_budget <= p->constraints.cltv_budget / 4);
@@ -1987,18 +1987,21 @@ static struct command_result *shadow_route_listchannels(struct command *cmd,
 		delaytok = json_get_member(buf, chan, "delay");
 		basefeetok = json_get_member(buf, chan, "base_fee_millisatoshi");
 		propfeetok = json_get_member(buf, chan, "fee_per_millionth");
+		scidtok =  json_get_member(buf, chan, "short_channel_id");
 		desttok =  json_get_member(buf, chan, "destination");
 
 		if (sattok == NULL || delaytok == NULL ||
 		    delaytok->type != JSMN_PRIMITIVE || basefeetok == NULL ||
 		    basefeetok->type != JSMN_PRIMITIVE || propfeetok == NULL ||
-		    propfeetok->type != JSMN_PRIMITIVE || desttok == NULL)
+		    propfeetok->type != JSMN_PRIMITIVE || desttok == NULL ||
+		    scidtok == NULL)
 			continue;
 
 		json_to_u16(buf, delaytok, &curr.cltv_expiry_delta);
 		json_to_number(buf, basefeetok, &curr.fee_base_msat);
 		json_to_number(buf, propfeetok,
 			       &curr.fee_proportional_millionths);
+		json_to_short_channel_id(buf, scidtok, &curr.short_channel_id);
 		json_to_sat(buf, sattok, &capacity);
 		json_to_node_id(buf, desttok, &curr.pubkey);
 
