@@ -3159,7 +3159,7 @@ def test_pay_fail_unconfirmed_channel(node_factory, bitcoind):
     # create l2->l1 channel.
     l2.fundwallet(amount_sat * 5)
     l1.rpc.connect(l2.info['id'], 'localhost', l2.port)
-    l2.rpc.fundchannel(l1.info['id'], amount_sat * 3)
+    scid = l2.rpc.fundchannel(l1.info['id'], amount_sat * 3)
     # channel is still unconfirmed.
 
     # Attempt to pay from l1 to l2.
@@ -3175,6 +3175,9 @@ def test_pay_fail_unconfirmed_channel(node_factory, bitcoind):
     # Now give enough capacity so l1 can pay.
     invl1 = l1.rpc.invoice(Millisatoshi(amount_sat * 2 * 1000), 'j', 'j')['bolt11']
     l2.rpc.pay(invl1)
+
+    # Wait for us to recognize that the channel is available
+    wait_for(lambda: l1.rpc.listpeers()['peers'][0]['channels'][0]['spendable_msat'].millisatoshis > amount_sat * 1000)
 
     # Now l1 can pay to l2.
     l1.rpc.pay(invl2)
