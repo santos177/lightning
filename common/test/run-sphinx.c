@@ -56,6 +56,9 @@ struct amount_sat amount_tx_fee(u32 fee_per_kw UNNEEDED, size_t weight UNNEEDED)
 /* Generated stub for bigsize_put */
 size_t bigsize_put(u8 buf[BIGSIZE_MAX_LEN] UNNEEDED, bigsize_t v UNNEEDED)
 { fprintf(stderr, "bigsize_put called!\n"); abort(); }
+/* Generated stub for ecdh */
+void ecdh(const struct pubkey *point UNNEEDED, struct secret *ss UNNEEDED)
+{ fprintf(stderr, "ecdh called!\n"); abort(); }
 /* Generated stub for fromwire_amount_msat */
 struct amount_msat fromwire_amount_msat(const u8 **cursor UNNEEDED, size_t *max UNNEEDED)
 { fprintf(stderr, "fromwire_amount_msat called!\n"); abort(); }
