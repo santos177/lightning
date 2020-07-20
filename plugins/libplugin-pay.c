@@ -2403,7 +2403,7 @@ static u32 payment_max_htlcs(const struct payment *p)
 	u32 res = 0;
 	for (size_t i = 0; i < tal_count(p->channel_hints); i++) {
 		h = &p->channel_hints[i];
-		if (h->local)
+		if (h->local && h->enabled)
 			res += h->htlc_budget;
 	}
 	return res;
