@@ -25,6 +25,8 @@ static u8 liquid_regtest_fee_asset[] = {
     0x05, 0x71, 0x49, 0x9c, 0x03, 0x62, 0x8a, 0x38, 0x51, 0xb8, 0xce,
 };
 
+/* NOTE: It needs BTG address prefix, and other params here ! */
+
 const struct chainparams networks[] = {
     {.network_name = "bitcoin",
      .bip173_name = "bc",
@@ -33,9 +35,9 @@ const struct chainparams networks[] = {
 				      0x72, 0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63,
 				      0xf7, 0x4f, 0x93, 0x1e, 0x83, 0x65, 0xe1,
 				      0x5a, 0x08, 0x9c, 0x68, 0xd6, 0x19, 0x00,
-				      0x00, 0x00, 0x00, 0x00}}}},
-     .rpc_port = 8332,
-     .cli = "bitcoin-cli",
+				      0x00, 0x00, 0x00, 0x00}}}}, // same genesis as bitcoin-gold
+     .rpc_port = 8338,
+     .cli = "bgold-cli",
      .cli_args = NULL,
      .cli_min_supported_version = 150000,
      .dust_limit = { 546 },
@@ -64,8 +66,8 @@ const struct chainparams networks[] = {
 				      0x5b, 0xbf, 0x28, 0xc3, 0x4f, 0x3a, 0x5e,
 				      0x33, 0x2a, 0x1f, 0xc7, 0xb2, 0xb7, 0x3c,
 				      0xf1, 0x88, 0x91, 0x0f}}}},
-     .rpc_port = 18332,
-     .cli = "bitcoin-cli",
+     .rpc_port = 18444,
+     .cli = "bgold-cli",
      .cli_args = "-regtest",
      .cli_min_supported_version = 150000,
      .dust_limit = { 546 },
@@ -84,7 +86,7 @@ const struct chainparams networks[] = {
      .bip70_name = "signet",
      .genesis_blockhash = {{{.u.u8 = {0xce, 0xbd, 0x8f, 0x6e, 0x69, 0x77, 0x30, 0xb7, 0x4c, 0x70, 0x9c, 0xdd, 0x1e, 0x6a, 0xba, 0xaf, 0x2a, 0xfc, 0x98, 0xbf, 0x4c, 0xff, 0xb2, 0x39, 0xf3, 0xdb, 0x44, 0x27, 0x64, 0x29, 0x00, 0x00}}}},
      .rpc_port = 38332,
-     .cli = "bitcoin-cli",
+     .cli = "bgold-cli",
      .cli_args = "-signet",
      .cli_min_supported_version = 150000,
      .dust_limit = { 546 },
@@ -105,8 +107,8 @@ const struct chainparams networks[] = {
 				      0xc3, 0xae, 0xba, 0x79, 0x97, 0x20, 0x84,
 				      0xe9, 0x0e, 0xad, 0x01, 0xea, 0x33, 0x09,
 				      0x00, 0x00, 0x00, 0x00}}}},
-     .rpc_port = 18332,
-     .cli = "bitcoin-cli",
+     .rpc_port = 18338,
+     .cli = "bgold-cli",
      .cli_args = "-testnet",
      .cli_min_supported_version = 150000,
      .dust_limit = { 546 },
@@ -256,4 +258,3 @@ const char *chainparams_get_network_names(const tal_t *ctx)
         tal_append_fmt(&networks_string, ", %s", networks[i].network_name);
     return networks_string;
 }
-
